@@ -3,8 +3,14 @@ using Catalog.API.Products.CreateProduct;
 using Microsoft.AspNetCore.Hosting;
 
 var builder = WebApplication.CreateBuilder(args);
-
-
+//Debug
+// 1- from visual studio when running launchsetting automatically running degugger
+// 2- command cmd: dotnet run then Debug -> Attach to process -> .NET (filter to get .NET process)
+// 3- from code like following warning don't use it on production
+if (System.Diagnostics.Debugger.IsAttached == false)
+{
+    System.Diagnostics.Debugger.Launch();
+}
 builder.Services.AddMediatR(cfg => {
     cfg.RegisterServicesFromAssembly(typeof(Program).Assembly/*Assembly.GetExecutingAssembly()*/);
 });
