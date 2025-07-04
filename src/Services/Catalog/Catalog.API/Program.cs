@@ -8,5 +8,9 @@ builder.Services.AddMediatR(cfg => {
 });
 
 var app = builder.Build();
-app.MapProductsAPIs();
+
+// register routing
+var group =app.MapGroup("/api");
+group.MapProductsAPIs();
+
 app.Run();
