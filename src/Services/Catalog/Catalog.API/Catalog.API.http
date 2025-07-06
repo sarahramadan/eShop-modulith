@@ -16,3 +16,18 @@ Content-Type: application/json
 GET {{Catalog.API_HostAddress}}/api/products
 
 ###
+
+POST {{Catalog.API_HostAddress}}/api/categories
+Content-Type: application/json
+
+{
+  "Name":"Milk",
+  "Description":"Choose between many fresh products",
+   "ImagePath":"http:///"
+}
+
+###
+
+GET {{Catalog.API_HostAddress}}/api/categories/123e4567-e89b-12d3-a456-426614174000
+
+###

@@ -1,0 +1,91 @@
+Certainly. Here’s a review and suggestions based on your requirements:
+-----------------------------------------------------------------------
+1. Naming Convention Review
+•	Classes:
+•	Product, Category, SubCategory follow PascalCase, which is correct for C#.
+•	ProductsMinimalAPI is also correct, but consider renaming to ProductEndpoints or ProductApiEndpoints for clarity and consistency with ASP.NET Core minimal API conventions.
+•	RegisterCQRSExtension → consider CqrsServiceCollectionExtensions for standard extension naming.
+•	Dispatcher and IDispatcher are clear and follow conventions.
+•	Methods:
+•	DispatcherCommand and DispatcherQuery should be verbs, e.g., DispatchCommandAsync and DispatchQueryAsync to better reflect their actions and async nature.
+•	MapProductsAPIs → MapProductEndpoints for clarity and singular consistency.
+•	Properties:
+•	All properties use PascalCase, which is correct.
+-----------------------------------------------------------------------
+2. Vertical Architecture Review
+•	Vertical (Feature-based) Architecture:
+•	Your code is mostly organized by feature (e.g., Products/CreateProduct, Category/GetCategory), which aligns with vertical slice architecture.
+•	Models are in a shared Models folder. For strict vertical architecture, consider placing models used only by a feature within that feature’s folder.
+•	Shared infrastructure (CQRS, Dispatcher) is in a shared project, which is appropriate.
+-----------------------------------------------------------------------
+3. Enhancements for Abstraction & Dynamic Structure
+a. Dispatcher Improvements
+•	Current Limitation: The dispatcher is tightly coupled to the DI container and specific handler interfaces.
+•	Enhancement: Use open generics and reflection to allow more dynamic handler resolution, or consider using 	MediatR directly for more abstraction.
+b. CQRS Registration
+•	Current: Only the dispatcher is registered.
+•	Enhancement: Add scanning/registration for all command/query handlers automatically using reflection or 	Scrutor.
+c. Models
+•	Current: Models are simple POCOs.
+•	Enhancement: For more abstraction, use interfaces or base classes for entities if you expect polymorphism 	or shared logic.
+d. Minimal API Endpoints
+•	Current: Endpoints are grouped, but logic is inline.
+•	Enhancement: Move endpoint logic to handler classes or services for better separation and testability.
+-----------------------------------------------------------------------
+4. Sample Refactoring Suggestions
+a. Dispatcher Naming & Abstraction
+public class Dispatcher(IServiceProvider serviceProvider) : IDispatcher
+{
+    private readonly IServiceProvider _serviceProvider = serviceProvider;
+
+    public async Task DispatchCommandAsync<TCommand>(TCommand command) where TCommand : ICommand
+    {
+        var handler = _serviceProvider.GetRequiredService<ICommandHandler<TCommand>>();
+        await handler.HandleCommandAsync(command);
+    }
+
+    public async Task<TResult> DispatchQueryAsync<TQuery, TResult>(TQuery query) where TQuery : IQuery
+    {
+        var handler = _serviceProvider.GetRequiredService<IQueryHandler<TQuery, TResult>>();
+        return await handler.HandleQueryAsync(query);
+    }
+}
+b. CQRS Registration with Handler Scanning
+public static void RegisterCQRSDependencies(this IServiceCollection services)
+{
+    services.AddScoped<IDispatcher, Dispatcher>();
+    // Register all ICommandHandler<> and IQueryHandler<,> implementations
+    services.Scan(scan => scan
+        .FromApplicationDependencies()
+        .AddClasses(classes => classes.AssignableTo(typeof(ICommandHandler<>)))
+        .AsImplementedInterfaces()
+        .WithScopedLifetime()
+        .AddClasses(classes => classes.AssignableTo(typeof(IQueryHandler<,>)))
+        .AsImplementedInterfaces()
+        .WithScopedLifetime());
+}
+c. Minimal API Endpoint Extraction
+public static class ProductEndpoints
+{
+    public static IEndpointRouteBuilder MapProductEndpoints(this RouteGroupBuilder group)
+    {
+        group.MapGet("/", GetProductsAsync);
+        group.MapPost("/", CreateProductAsync);
+        return group;
+    }
+
+    private static async Task<IResult> GetProductsAsync([FromServices] IProductService productService)
+    {
+        var products = await productService.GetAllAsync();
+        return Results.Ok(products);
+    }
+
+    private static async Task<IResult> CreateProductAsync(CreateProductCommand command, IMediator mediator)
+    {
+        var response = await mediator.Send(command);
+        return Results.Created("created", response);
+    }
+}
+----------------------------------------------------------------------------
+5. Summary Table
+| Area                | Current State                | Suggestion/Enhancement                | |---------------------|-----------------------------|---------------------------------------| | Naming              | Mostly correct               | Use verb-based async method names, singular endpoint names | | Architecture        | Feature-based, mostly vertical | Move feature-specific models to features, extract endpoint logic | | Abstraction         | Dispatcher uses DI directly  | Consider MediatR or generic handler scanning | | Dynamic Structure   | Manual handler registration  | Use assembly scanning for handlers    |
