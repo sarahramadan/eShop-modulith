@@ -1,6 +1,5 @@
-﻿using MediatR;
+﻿using Catalog.API.Models;
 using static Catalog.API.Products.CreateProduct.CreateProductHandler;
-using Catalog.API.Models;
 
 namespace Catalog.API.Products.CreateProduct;
 
@@ -18,7 +17,7 @@ public static class ProductEndpoints
         {
             return await Task.FromResult(new List<Product>());
         });
-        group.MapPost("/", async (CreateProductCommand productCommand,IMediator mediator) =>
+        group.MapPost("/", async (CreateProductCommand productCommand, IMediator mediator) =>
         {
             var response = await mediator.Send(productCommand);
             var xx = Results.Created("created", response);
