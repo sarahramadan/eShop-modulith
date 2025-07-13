@@ -1,5 +1,4 @@
 ﻿using SharedBlock.CQRS;
-using Catalog.API.Models;
 namespace Catalog.API.Category.CreateCategory;
 
 public class CreateCategoryHandler : ICommandHandler<CreateCategoryCommand>
