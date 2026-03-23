@@ -1,9 +1,10 @@
-
+﻿
 using Catalog.API.Category;
 using Catalog.API.Category.CreateCategory;
 using Catalog.API.Category.GetCategory;
 using Catalog.API.Products.CreateProduct;
 using SharedBlock.CQRS;
+using System.Runtime.CompilerServices;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,6 +17,14 @@ builder.Services.RegisterCQRSDependencies();
 builder.Services.AddScoped<ICommandHandler<CreateCategoryCommand>, CreateCategoryHandler>();
 builder.Services.AddScoped<IQueryHandler<GetCategoryById,Catalog.API.Models.Category>, GetCategoryHandler>();
 
+if (RuntimeFeature.IsDynamicCodeSupported)
+{
+    Console.WriteLine("JIT or ReadyToRun (IL+runtime present)");
+}
+else
+{
+    Console.WriteLine("AOT / NativeAOT (no dynamic code support)");
+}
 var app = builder.Build();
 
 // register routing
